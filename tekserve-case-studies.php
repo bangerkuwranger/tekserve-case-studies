@@ -3,14 +3,14 @@
  * Plugin Name: Tekserve Case Studies
  * Plugin URI: https://github.com/bangerkuwranger
  * Description: Custom Post Type for Case Studies; Includes Custom Fields & Genesis Shortcode
- * Version: 1.0
+ * Version: 1.1
  * Author: Chad A. Carino
  * Author URI: http://www.chadacarino.com
  * License: MIT
  */
 /*
 The MIT License (MIT)
-Copyright (c) 2013 Chad A. Carino
+Copyright (c) 2014 Chad A. Carino
  
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files (the "Software"), to deal in the Software without restriction, including without limitation the rights to use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of the Software, and to permit persons to whom the Software is furnished to do so, subject to the following conditions:
  
@@ -83,7 +83,7 @@ function add_tekserve_case_study_fields( $tekserve_case_study_id, $tekserve_case
 //create metabox for case study
 function add_upload_meta_box() {  
 	// Define the custom attachment for post type 
-    add_meta_box( 'tekserve_case_study_file', 'Case Study File', 'display_tekserve_case_study_file', 'tekserve_case_study', 'side', 'high' );  
+    add_meta_box( 'tekserve_case_study_file_meta', 'Case Study File', 'display_tekserve_case_study_file', 'tekserve_case_study', 'side', 'high' );  
 }
 add_action('admin_init', 'add_upload_meta_box');
 
@@ -93,16 +93,21 @@ function display_tekserve_case_study_file($tekserve_case_study) {
     wp_nonce_field(plugin_basename(__FILE__), 'tekserve_case_study_file_nonce');  
       
     $html = '<p class="tekserve-case-study-file-description">';  
-    $html .= 'Upload your PDF here.';  
-    $html .= '</p>';  
-    $html .= '<input type="file" id="tekserve_case_study_file" name="tekserve_case_study_file" value="" size="25">';
     $pdf = get_post_meta( $tekserve_case_study->ID, 'tekserve_case_study_file', true );
     if ( strlen(trim($pdf['url'])) > 0 ) {
-    	$html .= '<p class="current-file">Current File: ' . $pdf['name'] . ' <br/>URL: ' . $pdf['url'] . '</p>';
+		$html .= '</p>';  
+		$html .= '<input style="display:none;" type="file" id="tekserve_case_study_file" name="tekserve_case_study_file" value="" size="25">';
+    	$html .= '<p class="current-file"><b>Current File:</b> ' . $pdf['name'] . ' <br/>URL:  <a target="_blank" href="' . $pdf['url'] . '">' . $pdf['url'] . '</a></p>';
+    	$html .= '<a href="javascript:;" title="Remove File" id="tekserve-case-study-file-delete">' . __('Remove File') . '</a>';
+    }
+    else {
+    	$html .= 'Upload your PDF here.';  
+   		$html .= '</p>';  
+    	$html .= '<input type="file" id="tekserve_case_study_file" name="tekserve_case_study_file" value="" size="25">';
     }
     $html .= '<input type="hidden" id="tekserve-case-study-file-url" name="tekserve_case_study_file_url" value=" ' . $pdf['url'] . '" size="30" />';  
     if(strlen(trim($pdf['url'])) > 0) {  
-        $html .= '<a href="javascript:;" id="tekserve-case-study-file-delete">' . __('Delete File') . '</a>';  
+          
     } // end if  
       
     echo $html;  
@@ -269,6 +274,8 @@ function tekserve_case_study_shortcode( $atts ) {
 		), $atts )
 	);
 	
+	include_tekserve_case_study_css();
+	
 	//display multiple, i.e. if type is passed in shortcode
         if ($atts['type'] != ''){
             $casestudies = NEW WP_Query( array( 'post_type' => 'tekserve_case_study', 'tekserve-case-study-type' => $atts['type'], 'orderby' => 'rand' ) );
@@ -326,14 +333,17 @@ function tekserve_case_study_shortcode( $atts ) {
 }
 add_shortcode( 'tekserve-case-study', 'tekserve_case_study_shortcode' );
 
-//include css /js
-function include_tekserve_case_study_files() {
+//include css
+function include_tekserve_case_study_css() {
 	wp_enqueue_style ( 'tekserve_case_study', plugins_url().'/tekserve-case-studies/tekserve_case_studies.css' );
+}
+
+function include_tekserve_case_study_js() {
 	wp_register_script('tekserve_case_study_js', plugins_url().'/tekserve-case-studies/tekserve_case_studies.js'); 
 	wp_enqueue_script('tekserve_case_study_js'); 
 }
 
-add_action( 'wp_enqueue_scripts', 'include_tekserve_case_study_files' );
+add_action( 'admin_enqueue_scripts', 'include_tekserve_case_study_js' );
 
 
 function tekserve_case_study_type_filter() {
