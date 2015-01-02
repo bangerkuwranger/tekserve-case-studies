@@ -25,6 +25,6 @@ jQuery(function($j) {
           	
         });  
       
-    } // end if  
+    } // end if ($j('a#tekserve-case-study-file-delete').length === 1)
   
 });  
